@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: online-kotiba-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: APP_ORIGIN
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+      - key: UZBEKVOICE_STT_URL
+        value: https://uzbekvoice.ai/api/v1/stt
+      - key: UZBEKVOICE_STT_API_KEY
+        sync: false
+      - key: UZBEKVOICE_TTS_URL
+        value: https://uzbekvoice.ai/api/v1/tts
+      - key: UZBEKVOICE_TTS_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: REMINDER_JOB_CRON
+        value: "*/1 * * * *"
+      - key: MEETING_JOB_CRON
+        value: "*/5 * * * *"
+      - key: MEETING_AUDIO_REMINDER_CRON
+        value: "*/1 * * * *"

@@ -13,6 +13,13 @@ const isMissingSecretaryLogsTable = (error) => {
   return code === "PGRST205" || code === "PGRST204" || message.includes("public.secretary_logs");
 };
 
+const isMissingSecretaryLogsAudioColumn = (error) => {
+  if (!error) return false;
+  const code = `${error.code || ""}`.toUpperCase();
+  const message = `${error.message || ""}`.toLowerCase();
+  return code === "PGRST204" && message.includes("audio_url");
+};
+
 export const processSecretaryInput = async (req, res, next) => {
   try {
     const { audioBase64, text, timezone, context } = req.body;
@@ -47,7 +54,12 @@ export const processSecretaryInput = async (req, res, next) => {
       created_at: new Date().toISOString(),
     };
 
-    const saveResult = await supabaseAdmin.from("secretary_logs").insert(payload).select().single();
+    let saveResult = await supabaseAdmin.from("secretary_logs").insert(payload).select().single();
+    if (saveResult.error && isMissingSecretaryLogsAudioColumn(saveResult.error)) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.audio_url;
+      saveResult = await supabaseAdmin.from("secretary_logs").insert(fallbackPayload).select().single();
+    }
     let savedLog = null;
     let logSaved = false;
     if (saveResult.error) {

@@ -1,8 +1,12 @@
 import { supabase } from "../lib/supabase";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
 
 const request = async (path, options = {}) => {
+  if (!API_BASE_URL) {
+    throw new Error("VITE_API_BASE_URL is not configured.");
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
