@@ -275,7 +275,7 @@ router.post("/signup", validate(signUpSchema), async (req, res, next) => {
     setSessionCookie(res, session.token);
 
     const profile = await buildProfile(userResult.data);
-    res.status(201).json(ok({ profile, session: { expires_at: session.expires_at } }, "Account created"));
+    res.status(201).json(ok({ profile, session: { token: session.token, expires_at: session.expires_at } }, "Account created"));
   } catch (error) {
     next(error);
   }
@@ -310,7 +310,7 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
     setSessionCookie(res, session.token);
 
     const profile = await buildProfile(user);
-    res.json(ok({ profile, session: { expires_at: session.expires_at } }, "Login successful"));
+    res.json(ok({ profile, session: { token: session.token, expires_at: session.expires_at } }, "Login successful"));
   } catch (error) {
     next(error);
   }

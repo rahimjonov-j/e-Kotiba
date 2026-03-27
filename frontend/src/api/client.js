@@ -1,3 +1,5 @@
+import { getStoredAuthToken } from "../lib/session";
+
 const normalizeApiBaseUrl = (rawValue) => {
   const value = String(rawValue || "").trim().replace(/\/$/, "");
   if (!value) return "";
@@ -12,11 +14,13 @@ const request = async (path, options = {}) => {
     throw new Error("VITE_API_BASE_URL is not configured. Set it to your Render backend URL.");
   }
 
+  const authToken = getStoredAuthToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(options.headers || {}),
     },
   });

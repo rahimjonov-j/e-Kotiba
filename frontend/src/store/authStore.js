@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/client";
+import { clearStoredAuthToken, setStoredAuthToken } from "../lib/session";
 
 const getWelcomeKey = (userId) => `kotiba-welcome-shown:${userId}`;
 
@@ -18,6 +19,7 @@ export const useAuthStore = create((set, get) => ({
       set({ user: data.profile, initialized: true, loading: false });
       return data.profile;
     } catch {
+      clearStoredAuthToken();
       set({ user: null, initialized: true, loading: false });
       return null;
     }
@@ -27,9 +29,11 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     try {
       const data = await api.login(payload);
+      setStoredAuthToken(data.session?.token);
       set({ user: data.profile, initialized: true, loading: false });
       return data;
     } catch (error) {
+      clearStoredAuthToken();
       set({ loading: false, initialized: true });
       throw error;
     }
@@ -39,9 +43,11 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     try {
       const data = await api.signUp(payload);
+      setStoredAuthToken(data.session?.token);
       set({ user: data.profile, initialized: true, loading: false });
       return data;
     } catch (error) {
+      clearStoredAuthToken();
       set({ loading: false, initialized: true });
       throw error;
     }
@@ -53,6 +59,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       await api.logout();
     } finally {
+      clearStoredAuthToken();
       if (currentUser?.id) {
         localStorage.removeItem(getWelcomeKey(currentUser.id));
       }

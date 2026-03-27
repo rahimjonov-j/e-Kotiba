@@ -7,7 +7,9 @@ import { extractUserName, extractUserSettings, getAuthSchemaMode } from "../util
 export const requireAuth = async (req, _res, next) => {
   try {
     const cookies = parseCookies(req.headers.cookie || "");
-    const sessionToken = cookies[env.sessionCookieName] || cookies.kotiba_session;
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    const sessionToken = bearerToken || cookies[env.sessionCookieName] || cookies.kotiba_session;
 
     if (!sessionToken) {
       throw new AppError("Unauthorized", 401);
@@ -65,4 +67,3 @@ export const requireAuth = async (req, _res, next) => {
     next(error);
   }
 };
-
