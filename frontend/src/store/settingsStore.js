@@ -5,7 +5,7 @@ import { getLocalTimezone } from "../lib/timezones";
 const DEFAULT_SETTINGS = {
   default_reminder_unit: "hour",
   reminder_interval: "1min",
-  preferred_channel: "telegram",
+  preferred_channel: "in_app",
   language: "uz",
   timezone: getLocalTimezone(),
 };

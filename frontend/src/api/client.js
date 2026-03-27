@@ -1,10 +1,17 @@
 import { supabase } from "../lib/supabase";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
+const normalizeApiBaseUrl = (rawValue) => {
+  const value = String(rawValue || "").trim().replace(/\/$/, "");
+  if (!value) return "";
+  if (/\/api$/i.test(value)) return value;
+  return `${value}/api`;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 const request = async (path, options = {}) => {
   if (!API_BASE_URL) {
-    throw new Error("VITE_API_BASE_URL is not configured.");
+    throw new Error("VITE_API_BASE_URL is not configured. Set it to your Render backend URL.");
   }
 
   const {

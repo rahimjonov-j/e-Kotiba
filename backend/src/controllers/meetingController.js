@@ -76,7 +76,7 @@ export const listMeetings = async (req, res, next) => {
 
     const result = await supabaseAdmin
       .from("meetings")
-      .select("*, clients(name, phone, email, telegram_chat_id)", { count: "exact" })
+      .select("*, clients(name, phone, email)", { count: "exact" })
       .eq("user_id", req.user.id)
       .order("meeting_datetime", { ascending: true })
       .range(from, to);
@@ -105,7 +105,7 @@ export const updateMeeting = async (req, res, next) => {
       .update(req.body)
       .eq("id", id)
       .eq("user_id", req.user.id)
-      .select("*, clients(name, phone, email, telegram_chat_id)")
+      .select("*, clients(name, phone, email)")
       .single();
 
     if (result.error && isMissingMeetingAudioColumns(result.error)) {
@@ -119,7 +119,7 @@ export const updateMeeting = async (req, res, next) => {
         .update(fallbackPatch)
         .eq("id", id)
         .eq("user_id", req.user.id)
-        .select("*, clients(name, phone, email, telegram_chat_id)")
+        .select("*, clients(name, phone, email)")
         .single();
     }
 

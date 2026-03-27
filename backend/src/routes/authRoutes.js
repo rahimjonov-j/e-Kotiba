@@ -10,7 +10,7 @@ const router = Router();
 
 const DEFAULT_SETTINGS = {
   default_reminder_unit: "hour",
-  preferred_channel: "telegram",
+  preferred_channel: "in_app",
   language: "uz",
   timezone: "Asia/Tashkent",
 };

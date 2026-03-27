@@ -34,8 +34,6 @@ services:
         value: https://uzbekvoice.ai/api/v1/tts
       - key: UZBEKVOICE_TTS_API_KEY
         sync: false
-      - key: TELEGRAM_BOT_TOKEN
-        sync: false
       - key: REMINDER_JOB_CRON
         value: "*/1 * * * *"
       - key: MEETING_JOB_CRON

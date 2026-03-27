@@ -215,10 +215,10 @@ export function MeetingsPage() {
         <CardContent className="space-y-2">
           {cancelledMeetings.length === 0 && <EmptyState label="Hali bekor qilingan uchrashuv yo'q." />}
           {cancelledMeetings.map((meeting) => (
-            <div key={meeting.id} className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm dark:border-red-900 dark:bg-red-950/40">
+            <div key={meeting.id} className="rounded-2xl border border-rose-200/80 bg-rose-50/70 p-4 shadow-[0_8px_20px_rgba(244,63,94,0.08)] dark:border-rose-900 dark:bg-rose-950/30">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-semibold">{meeting.title}</p>
-                <span className="rounded-full bg-red-100 px-2 py-1 text-[11px] text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                <span className="inline-flex shrink-0 items-center rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-[11px] font-semibold leading-none text-rose-700 dark:border-rose-700 dark:bg-rose-900/40 dark:text-rose-200">
                   Bekor qilingan
                 </span>
               </div>

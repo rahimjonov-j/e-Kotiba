@@ -2,7 +2,6 @@ import cron from "node-cron";
 import { env } from "../config/env.js";
 import { supabaseAdmin } from "../lib/supabase.js";
 import { assertSupabase } from "../utils/db.js";
-import { sendTelegramMessage } from "../services/notificationService.js";
 import { generateTtsAudio } from "../services/aiService.js";
 import { uploadReminderAudio, getStaticReminderUrl } from "../services/storageService.js";
 const isMissingMeetingAudioColumns = (error) =>
@@ -127,28 +126,24 @@ const processMeetingJob = async (job) => {
 
   const meetingResult = await supabaseAdmin
     .from("meetings")
-    .select("*, clients(name, telegram_chat_id)")
+    .select("*, clients(name)")
     .eq("id", meetingId)
     .single();
 
   const meeting = assertSupabase(meetingResult, "Meeting not found");
   
-  if (meeting.status !== "scheduled" || !meeting.auto_message_enabled) {
+  const meetingStatus = meeting.status || "scheduled";
+  if (meetingStatus !== "scheduled" || !meeting.auto_message_enabled) {
     await finishJob(job.id, "completed");
     return;
   }
 
-  const client = meeting.clients;
-  const text = `Reminder: ${meeting.title} meeting at ${new Date(meeting.meeting_datetime).toLocaleString("en-US", { timeZone: "Asia/Tashkent" })}`;
-
-  if (client?.telegram_chat_id) {
-    await sendTelegramMessage({ chatId: client.telegram_chat_id, message: text });
-  }
+  const text = `Eslatma: ${meeting.title} uchrashuvi ${new Date(meeting.meeting_datetime).toLocaleString("uz-UZ", { timeZone: "Asia/Tashkent" })} da rejalangan.`;
 
   await createNotification({
     userId: meeting.user_id,
-    title: "Meeting auto-message sent",
-    message: text,
+    title: "Meeting reminder created",
+    message: `${text} (ichki bildirishnoma)`,
   });
 
   await finishJob(job.id, "completed");

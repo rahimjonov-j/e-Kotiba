@@ -29,7 +29,6 @@ export const env = {
   uzbekVoiceSttApiKey: process.env.UZBEKVOICE_STT_API_KEY || process.env.UZBEKVOICE_API_KEY || "",
   uzbekVoiceTtsUrl: process.env.UZBEKVOICE_TTS_URL || "",
   uzbekVoiceTtsApiKey: process.env.UZBEKVOICE_TTS_API_KEY || process.env.UZBEKVOICE_API_KEY || "",
-  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || "",
   reminderJobCron: process.env.REMINDER_JOB_CRON || "*/1 * * * *",
   meetingJobCron: process.env.MEETING_JOB_CRON || "*/5 * * * *",
   meetingAudioReminderCron: process.env.MEETING_AUDIO_REMINDER_CRON || "*/1 * * * *",
@@ -49,4 +48,5 @@ export const assertRequiredEnv = () => {
   if ((env.uzbekVoiceTtsUrl && !env.uzbekVoiceTtsApiKey) || (!env.uzbekVoiceTtsUrl && env.uzbekVoiceTtsApiKey)) {
     console.warn("TTS configuration is incomplete. Set both UZBEKVOICE_TTS_URL and UZBEKVOICE_TTS_API_KEY (or UZBEKVOICE_API_KEY).");
   }
+
 };

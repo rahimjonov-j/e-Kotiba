@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const settingsValues = {
   default_reminder_unit: ["minute", "hour", "day", "week", "custom"],
-  preferred_channel: ["telegram", "email", "in_app"],
+  preferred_channel: ["in_app"],
   language: ["uz", "en", "ru"],
 };
 

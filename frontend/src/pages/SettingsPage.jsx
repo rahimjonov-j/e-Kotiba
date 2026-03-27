@@ -12,7 +12,7 @@ import { getTimezoneList } from "../lib/timezones";
 
 const allowedUnits = ["minute", "hour", "day", "week", "custom"];
 const allowedIntervals = ["1min", "5min", "15min", "1hour"];
-const allowedChannels = ["telegram", "email", "in_app"];
+const allowedChannels = ["in_app"];
 const allowedLanguages = ["uz", "en", "ru"];
 const allowedTimezones = getTimezoneList();
 
@@ -117,8 +117,6 @@ export function SettingsPage() {
               onChange={(e) => setForm({ ...form, preferred_channel: e.target.value })}
               disabled={updateMutation.isPending}
             >
-              <option value="telegram">{t("channel_telegram")}</option>
-              <option value="email">{t("channel_email")}</option>
               <option value="in_app">{t("channel_in_app")}</option>
             </Select>
           </div>

@@ -4,6 +4,13 @@ import { BrushCleaning } from "../components/icons/BrushCleaning";
 import { useClients, useCreateClient, useCreateExpense, useCreateMeeting, useProcessSecretary, useTranscribeSecretary } from "../hooks/useApi";
 import { useSettingsStore } from "../store/settingsStore";
 
+const createDefaultGreetingMessage = () => ({
+  id: "initial",
+  sender: "bot",
+  text: "Assalomu alekum, hojayn bugunga qanday uchrashuvlar belgilay",
+  time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
+});
+
 const toBase64 = (blob) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -33,14 +40,7 @@ export function SecretaryPage() {
       const saved = localStorage.getItem("kotiba_chat_messages");
       if (saved) return JSON.parse(saved);
     } catch {}
-    return [
-      {
-        id: "initial",
-        sender: "bot",
-        text: "Assalomu alaykum! Men sizning shaxsiy yordamchingizman. Bugungi rejalaringizni ko'rib chiqishimizni xohlaysizmi yoki yangi topshiriq bormi?",
-        time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
-      },
-    ];
+    return [createDefaultGreetingMessage()];
   });
 
   const [inputValue, setInputValue] = useState(() => {
@@ -50,6 +50,7 @@ export function SecretaryPage() {
   const [voiceState, setVoiceState] = useState("idle"); // idle, recording, transcribing
   const [aiThinking, setAiThinking] = useState(false);
   const [pendingMeeting, setPendingMeeting] = useState(null);
+  const [clearNotice, setClearNotice] = useState("");
   const messagesEndRef = useRef(null);
 
   const processMutation = useProcessSecretary();
@@ -92,6 +93,14 @@ export function SecretaryPage() {
         ...msg,
       },
     ]);
+  };
+
+  const clearChat = () => {
+    setMessages([createDefaultGreetingMessage()]);
+    setInputValue("");
+    setPendingMeeting(null);
+    setClearNotice("Chat tozalandi");
+    setTimeout(() => setClearNotice(""), 1500);
   };
 
   const ensureClientId = async (personName) => {
@@ -238,12 +247,18 @@ export function SecretaryPage() {
     <div className="flex flex-col h-full bg-[#f3f4f6] overflow-hidden relative border-none sm:border-l sm:border-slate-200 shadow-inner">
       
       <button 
-        onClick={() => setMessages([{ id: Date.now().toString(), sender: "bot", text: "Chat tarixi tozalandi. Tizim xotirasi yangilandi. Qanday yordam bera olaman?", time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }) }])}
+        onClick={clearChat}
         className="absolute right-4 top-4 p-2.5 bg-white shadow-md text-slate-500 hover:text-teal-600 hover:bg-teal-50 rounded-full transition-colors flex items-center justify-center z-50 hover:scale-105 active:scale-95"
         title="Suhbatni tozalash"
       >
         <BrushCleaning className="w-5 h-5" />
       </button>
+
+      {clearNotice && (
+        <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700 shadow-sm border border-emerald-200">
+          {clearNotice}
+        </div>
+      )}
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-36 pt-16">
