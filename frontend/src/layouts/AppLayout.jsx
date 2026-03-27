@@ -1,5 +1,5 @@
 import { useLocation, Link, NavLink } from "react-router-dom";
-import { LayoutDashboard, Mic2, Bell, CalendarDays, Users, WalletCards, Settings, Shield } from "lucide-react";
+import { LayoutDashboard, Mic2, Bell, CalendarDays, WalletCards, Settings, Shield } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../hooks/useI18n";
 import { AudioReminderPlayer } from "../components/AudioReminderPlayer";
@@ -13,7 +13,6 @@ const items = [
   { to: "/dashboard", labelKey: "nav_dashboard", icon: LayoutDashboard },
   { to: "/reminders", labelKey: "nav_reminders", icon: Bell },
   { to: "/meetings", labelKey: "nav_meetings", icon: CalendarDays },
-  { to: "/clients", labelKey: "nav_clients", icon: Users },
   { to: "/expenses", labelKey: "nav_expenses", icon: WalletCards },
   { to: "/settings", labelKey: "nav_settings", icon: Settings },
   { to: "/admin", labelKey: "nav_admin", icon: Shield },
@@ -49,7 +48,7 @@ export function AppLayout({ children }) {
   const unreadCount = (notificationsData?.items || []).filter((item) => !item.is_read).length;
   const isAdmin = profileData?.profile?.role === "admin";
   const navItems = isAdmin ? items : items.filter((item) => item.to !== "/admin");
-  const mobileOrder = ["/", "/meetings", "/expenses", "/dashboard", "/clients", "/admin"];
+  const mobileOrder = ["/", "/meetings", "/expenses", "/dashboard", "/admin"];
   const mobileItems = mobileOrder
     .map((path) => navItems.find((item) => item.to === path))
     .filter(Boolean);

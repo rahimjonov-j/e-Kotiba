@@ -8,7 +8,6 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage").then((module) =
 const SecretaryPage = lazy(() => import("./pages/SecretaryPage").then((module) => ({ default: module.SecretaryPage })));
 const RemindersPage = lazy(() => import("./pages/RemindersPage").then((module) => ({ default: module.RemindersPage })));
 const MeetingsPage = lazy(() => import("./pages/MeetingsPage").then((module) => ({ default: module.MeetingsPage })));
-const ClientsPage = lazy(() => import("./pages/ClientsPage").then((module) => ({ default: module.ClientsPage })));
 const ExpensesPage = lazy(() => import("./pages/ExpensesPage").then((module) => ({ default: module.ExpensesPage })));
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then((module) => ({ default: module.SettingsPage })));
 const AdminPage = lazy(() => import("./pages/AdminPage").then((module) => ({ default: module.AdminPage })));
@@ -34,7 +33,6 @@ export default function App() {
           <Route path="/dashboard" element={<ProtectedShell><DashboardPage /></ProtectedShell>} />
           <Route path="/reminders" element={<ProtectedShell><RemindersPage /></ProtectedShell>} />
           <Route path="/meetings" element={<ProtectedShell><MeetingsPage /></ProtectedShell>} />
-          <Route path="/clients" element={<ProtectedShell><ClientsPage /></ProtectedShell>} />
           <Route path="/expenses" element={<ProtectedShell><ExpensesPage /></ProtectedShell>} />
           <Route path="/settings" element={<ProtectedShell><SettingsPage /></ProtectedShell>} />
           <Route path="/admin" element={<ProtectedShell><AdminPage /></ProtectedShell>} />
