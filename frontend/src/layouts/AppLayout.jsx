@@ -91,8 +91,11 @@ export function AppLayout({ children }) {
         <main className={`min-w-0 animate-fade-in ${isSecretary ? "h-[calc(100dvh-138px)] md:h-[calc(100vh-170px)] min-h-0 relative" : "space-y-4"}`}>{children}</main>
       </div>
 
-      <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[460px] -translate-x-1/2 border-t border-border bg-background/95 p-2 backdrop-blur">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar">
+      <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[460px] -translate-x-1/2 border-t border-border/70 bg-background/95 px-3 pb-3 pt-2 backdrop-blur">
+        <div
+          className="mx-auto grid w-full max-w-md gap-2"
+          style={{ gridTemplateColumns: `repeat(${mobileItems.length || 1}, minmax(0, 1fr))` }}
+        >
           {mobileItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -100,16 +103,20 @@ export function AppLayout({ children }) {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex min-w-[72px] shrink-0 flex-col items-center rounded-xl px-2 py-1 text-[11px] ${isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`
+                  `flex min-h-[60px] w-full flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-medium transition-all duration-200 ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-[0_12px_24px_rgba(20,155,122,0.24)]"
+                      : "text-muted-foreground hover:bg-slate-100/80"
+                  }`
                 }
               >
                 <span className="relative inline-flex">
-                  <Icon size={14} />
+                  <Icon size={15} />
                   {item.to === "/reminders" && unreadCount > 0 && (
                     <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">{unreadCount}</span>
                   )}
                 </span>
-                <span>{t(item.labelKey)}</span>
+                <span className="mt-1 text-center leading-none">{t(item.labelKey)}</span>
               </NavLink>
             );
           })}
