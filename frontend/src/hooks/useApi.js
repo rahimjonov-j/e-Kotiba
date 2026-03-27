@@ -17,8 +17,31 @@ export const useCreateReminder = () => {
   });
 };
 
+export const useUpdateReminder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }) => api.updateReminder(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+};
+
+export const useDeleteReminder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api.deleteReminder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+};
+
 export const useProcessSecretary = () => useMutation({ mutationFn: api.processSecretary });
 export const useTranscribeSecretary = () => useMutation({ mutationFn: api.transcribeSecretary });
+export const useGenerateSecretaryReplyAudio = () => useMutation({ mutationFn: api.generateSecretaryReplyAudio });
 
 export const useClients = () => useQuery({ queryKey: ["clients"], queryFn: api.listClients });
 export const useProfile = () => useQuery({ queryKey: ["profile"], queryFn: api.getProfile, staleTime: 5 * 60 * 1000 });
@@ -83,14 +106,32 @@ export const useNotifications = () =>
   useQuery({
     queryKey: ["notifications"],
     queryFn: api.listNotifications,
-    refetchInterval: 60000,
+    staleTime: 10 * 1000,
+    refetchInterval: 15 * 1000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    refetchOnMount: true,
+    retry: 1,
   });
 
 export const useMarkNotificationRead = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.markNotificationRead,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: (data, notificationId) => {
+      queryClient.setQueryData(["notifications"], (current) => {
+        if (!current?.items) return current;
+        return {
+          ...current,
+          items: current.items.map((item) =>
+            item.id === notificationId
+              ? { ...item, is_read: true, status: "read" }
+              : item
+          ),
+        };
+      });
+    },
   });
 };
 

@@ -6,7 +6,7 @@ Production-ready foundation for a mobile-first online secretary system with Reac
 - Frontend: React (Vite), JavaScript (JSX), Tailwind, shadcn-style UI, Zustand, TanStack Query
 - Backend: Node.js + Express
 - Database/Auth/Storage: Supabase PostgreSQL + Auth + Storage
-- AI: UzbekVoice STT/TTS + Gemini 2.5
+- AI: UzbekVoice STT/TTS + OpenAI
 - Deploy: Vercel (frontend) + Render/Railway (backend) + Supabase
 
 ## Monorepo structure
@@ -40,8 +40,8 @@ npm run dev
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `GEMINI_API_KEY`
-- `GEMINI_MODEL`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
 - `UZBEKVOICE_STT_URL`
 - `UZBEKVOICE_STT_API_KEY`
 - `UZBEKVOICE_TTS_URL`

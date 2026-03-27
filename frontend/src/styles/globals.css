@@ -40,6 +40,14 @@ body {
     radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.08), transparent 40%);
 }
 
+#root {
+  min-height: 100vh;
+}
+
+.app-phone-shell {
+  min-height: 100vh;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -47,4 +55,44 @@ body {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  #root {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .app-phone-shell {
+    position: relative;
+    width: min(460px, calc(100vw - 32px));
+    min-height: calc(100vh - 32px);
+    border-radius: 36px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: hsl(var(--background));
+    box-shadow:
+      0 40px 90px rgba(15, 23, 42, 0.18),
+      0 14px 36px rgba(15, 23, 42, 0.12);
+  }
+
+  .app-phone-shell::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 24px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.12);
+    z-index: 60;
+    pointer-events: none;
+  }
 }

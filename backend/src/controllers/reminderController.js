@@ -5,6 +5,7 @@ import { ok } from "../utils/response.js";
 import { assertSupabase } from "../utils/db.js";
 import { AppError } from "../utils/errors.js";
 import { toPagination } from "../utils/pagination.js";
+import { buildDueReminderText } from "../utils/reminderText.js";
 
 const isMissingSystemJobsTable = (error) =>
   error?.code === "PGRST205" || String(error?.message || "").includes("public.system_jobs");
@@ -26,6 +27,20 @@ const enqueueReminderJob = async ({ reminderId, runAt }) => {
   return true;
 };
 
+const resolveReminderAudioText = ({ parsedData, cleanedText, originalText, title }) => {
+  const candidates = [
+    parsedData?.reminder_audio_text,
+    parsedData?.reminder_message,
+    parsedData?.notification_message,
+    cleanedText,
+    originalText,
+    title,
+  ];
+
+  const first = candidates.find((value) => typeof value === "string" && value.trim());
+  return buildDueReminderText(first, title || cleanedText || originalText);
+};
+
 export const createReminder = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -38,12 +53,19 @@ export const createReminder = async (req, res, next) => {
       next_run_at,
       parsed_data,
       tts_voice,
+      status,
     } = req.body;
 
     let audioUrl = null;
     let audioError = null;
+    const audioText = resolveReminderAudioText({
+      parsedData: parsed_data,
+      cleanedText: cleaned_text,
+      originalText: original_text,
+      title,
+    });
     try {
-      const audioBase64 = await generateTtsAudio({ text: cleaned_text || original_text, voice: tts_voice });
+      const audioBase64 = await generateTtsAudio({ text: audioText, voice: tts_voice });
       audioUrl = await uploadReminderAudio({ userId, audioBase64 });
     } catch (error) {
       audioUrl = null;
@@ -61,8 +83,13 @@ export const createReminder = async (req, res, next) => {
         frequency_unit,
         next_run_at,
         audio_url: audioUrl,
-        parsed_data,
-        status: "active",
+        parsed_data: {
+          ...(parsed_data || {}),
+          reminder_audio_text: audioText,
+          reminder_message: audioText,
+          notification_message: audioText,
+        },
+        status: status || "active",
       })
       .select()
       .single();

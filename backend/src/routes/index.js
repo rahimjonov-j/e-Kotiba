@@ -20,8 +20,8 @@ router.get("/health", (_req, res) => {
   });
 });
 
-router.use(requireAuth);
 router.use("/auth", authRoutes);
+router.use(requireAuth);
 router.use("/secretary", secretaryRoutes);
 router.use("/reminders", reminderRoutes);
 router.use("/meetings", meetingRoutes);

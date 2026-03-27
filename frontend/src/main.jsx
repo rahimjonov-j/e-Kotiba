@@ -6,7 +6,20 @@ import "./styles/globals.css";
 import { useUiStore } from "./store/uiStore";
 import { useSettingsStore } from "./store/settingsStore";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      retry: 1,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 const ThemeSync = ({ children }) => {
   const theme = useUiStore((state) => state.theme);
@@ -24,11 +37,11 @@ const ThemeSync = ({ children }) => {
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeSync>
+  <QueryClientProvider client={queryClient}>
+    <ThemeSync>
+      <div className="app-phone-shell">
         <App />
-      </ThemeSync>
-    </QueryClientProvider>
-  </React.StrictMode>
+      </div>
+    </ThemeSync>
+  </QueryClientProvider>
 );

@@ -9,20 +9,29 @@ import { useUiStore } from "../store/uiStore";
 import { LoadingState } from "../components/LoadingState";
 import { ErrorState } from "../components/ErrorState";
 import { getTimezoneList } from "../lib/timezones";
+import { useAuthStore } from "../store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const allowedUnits = ["minute", "hour", "day", "week", "custom"];
 const allowedIntervals = ["1min", "5min", "15min", "1hour"];
 const allowedChannels = ["in_app"];
 const allowedLanguages = ["uz", "en", "ru"];
 const allowedTimezones = getTimezoneList();
+const verifiedVoiceOptions = [
+  { value: "lola", label: "Lola" },
+  { value: "shoira", label: "Shoira" },
+  { value: "Fotima-angry", label: "Fotima-angry" },
+];
 
 export function SettingsPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const globalSettings = useSettingsStore((state) => state.settings);
   const setSettings = useSettingsStore((state) => state.setSettings);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const theme = useUiStore((state) => state.theme);
   const setTheme = useUiStore((state) => state.setTheme);
+  const logout = useAuthStore((state) => state.logout);
 
   const settingsQuery = useSettings();
   const updateMutation = useUpdateSettings();
@@ -40,10 +49,11 @@ export function SettingsPage() {
   const isValid = useMemo(
     () =>
       allowedUnits.includes(form.default_reminder_unit) &&
-      (!form.reminder_interval || allowedIntervals.includes(form.reminder_interval)) &&
+      allowedIntervals.includes(form.reminder_interval || "1min") &&
       allowedChannels.includes(form.preferred_channel) &&
       allowedLanguages.includes(form.language) &&
-      allowedTimezones.includes(form.timezone),
+      allowedTimezones.includes(form.timezone) &&
+      verifiedVoiceOptions.some((voice) => voice.value === form.tts_voice),
     [form]
   );
 
@@ -56,12 +66,18 @@ export function SettingsPage() {
     }
 
     try {
-      const data = await updateMutation.mutateAsync(form);
+      const data = await updateMutation.mutateAsync({ ...form, theme });
       setLanguage(data.settings.language);
+      setTheme(data.settings.theme || theme);
       setMessage(t("settings_saved"));
     } catch {
       setMessage(t("settings_saveError"));
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
 
   if (settingsQuery.isLoading) return <LoadingState label={t("settings_loading")} />;
@@ -78,6 +94,22 @@ export function SettingsPage() {
             <Select value={theme} onChange={(e) => setTheme(e.target.value)}>
               <option value="light">{t("settings_themeLight")}</option>
               <option value="dark">{t("settings_themeDark")}</option>
+              <option value="system">System</option>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{t("settings_voice")}</p>
+            <Select
+              value={form.tts_voice || "lola"}
+              onChange={(e) => setForm({ ...form, tts_voice: e.target.value })}
+              disabled={updateMutation.isPending}
+            >
+              {verifiedVoiceOptions.map((voice) => (
+                <option key={voice.value} value={voice.value}>
+                  {voice.label}
+                </option>
+              ))}
             </Select>
           </div>
 
@@ -152,6 +184,9 @@ export function SettingsPage() {
 
           <Button onClick={save} disabled={updateMutation.isPending || !isValid}>
             {updateMutation.isPending ? t("settings_saving") : t("settings_save")}
+          </Button>
+          <Button onClick={handleLogout} variant="outline">
+            Logout
           </Button>
 
           {message && <p className="text-sm text-emerald-600">{message}</p>}

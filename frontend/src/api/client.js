@@ -1,5 +1,3 @@
-import { supabase } from "../lib/supabase";
-
 const normalizeApiBaseUrl = (rawValue) => {
   const value = String(rawValue || "").trim().replace(/\/$/, "");
   if (!value) return "";
@@ -14,15 +12,11 @@ const request = async (path, options = {}) => {
     throw new Error("VITE_API_BASE_URL is not configured. Set it to your Render backend URL.");
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       ...(options.headers || {}),
     },
   });
@@ -43,13 +37,20 @@ const request = async (path, options = {}) => {
 
 export const api = {
   health: () => request("/health", { method: "GET" }),
+  signUp: (payload) => request("/auth/signup", { method: "POST", body: JSON.stringify(payload) }),
+  login: (payload) => request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  logout: () => request("/auth/logout", { method: "POST" }),
+  getSession: () => request("/auth/session", { method: "GET" }),
   getProfile: () => request("/auth/me", { method: "GET" }),
   getSettings: () => request("/auth/settings", { method: "GET" }),
   updateSettings: (settings) => request("/auth/settings", { method: "PATCH", body: JSON.stringify(settings) }),
   processSecretary: (payload) => request("/secretary/process", { method: "POST", body: JSON.stringify(payload) }),
   transcribeSecretary: (payload) => request("/secretary/transcribe", { method: "POST", body: JSON.stringify(payload) }),
+  generateSecretaryReplyAudio: (payload) => request("/secretary/reply-audio", { method: "POST", body: JSON.stringify(payload) }),
   listReminders: () => request("/reminders?page=1&limit=50", { method: "GET" }),
   createReminder: (payload) => request("/reminders", { method: "POST", body: JSON.stringify(payload) }),
+  updateReminder: (id, payload) => request(`/reminders/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteReminder: (id) => request(`/reminders/${id}`, { method: "DELETE" }),
   listMeetings: () => request("/meetings?page=1&limit=50", { method: "GET" }),
   createMeeting: (payload) => request("/meetings", { method: "POST", body: JSON.stringify(payload) }),
   updateMeeting: (id, payload) => request(`/meetings/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),

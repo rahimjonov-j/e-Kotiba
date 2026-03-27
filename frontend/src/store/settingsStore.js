@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { api } from "../api/client";
 import { getLocalTimezone } from "../lib/timezones";
+import { useUiStore } from "./uiStore";
 
 const DEFAULT_SETTINGS = {
   default_reminder_unit: "hour",
@@ -8,6 +9,11 @@ const DEFAULT_SETTINGS = {
   preferred_channel: "in_app",
   language: "uz",
   timezone: getLocalTimezone(),
+  theme: "light",
+  audio_enabled: true,
+  monthly_salary: 0,
+  tts_voice: "lola",
+  welcome_seen: false,
 };
 
 const STORAGE_KEY = "kotiba-language";
@@ -31,6 +37,7 @@ export const useSettingsStore = create((set, get) => ({
   setSettings: (settings) => {
     const merged = { ...DEFAULT_SETTINGS, ...(settings || {}) };
     localStorage.setItem(STORAGE_KEY, merged.language);
+    useUiStore.getState().setTheme(merged.theme || "light");
     set({ settings: merged, language: merged.language, initialized: true });
   },
 

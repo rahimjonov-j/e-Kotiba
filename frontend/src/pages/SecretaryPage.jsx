@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Send, Paperclip, Calendar, DollarSign, Loader2 } from "lucide-react";
 import { BrushCleaning } from "../components/icons/BrushCleaning";
-import { useClients, useCreateClient, useCreateExpense, useCreateMeeting, useProcessSecretary, useTranscribeSecretary } from "../hooks/useApi";
+import { useClients, useCreateClient, useCreateExpense, useCreateMeeting, useCreateReminder, useGenerateSecretaryReplyAudio, useProcessSecretary, useTranscribeSecretary, useUpdateSettings } from "../hooks/useApi";
 import { useSettingsStore } from "../store/settingsStore";
 
 const createDefaultGreetingMessage = () => ({
@@ -27,6 +27,13 @@ const normalizeToIso = (value) => {
   const direct = new Date(raw);
   if (!Number.isNaN(direct.getTime())) return direct.toISOString();
   return null;
+};
+
+const mapRecurrenceToFrequency = (recurrence) => {
+  if (recurrence === "daily") return { frequency_value: 1, frequency_unit: "day" };
+  if (recurrence === "weekly") return { frequency_value: 1, frequency_unit: "week" };
+  if (recurrence === "monthly") return { frequency_value: 1, frequency_unit: "custom" };
+  return { frequency_value: null, frequency_unit: null };
 };
 
 // Remove old WaveAnimation
@@ -58,11 +65,15 @@ export function SecretaryPage() {
   const createMeeting = useCreateMeeting();
   const createClient = useCreateClient();
   const createExpense = useCreateExpense();
+  const createReminder = useCreateReminder();
+  const updateSettings = useUpdateSettings();
+  const generateReplyAudio = useGenerateSecretaryReplyAudio();
   const clientsQuery = useClients();
 
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
+  const assistantAudioRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,6 +92,10 @@ export function SecretaryPage() {
     return () => {
       if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop();
       if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+      if (assistantAudioRef.current) {
+        assistantAudioRef.current.pause();
+        assistantAudioRef.current = null;
+      }
     };
   }, []);
 
@@ -101,6 +116,30 @@ export function SecretaryPage() {
     setPendingMeeting(null);
     setClearNotice("Chat tozalandi");
     setTimeout(() => setClearNotice(""), 1500);
+  };
+
+  const playAssistantReply = async (replyText) => {
+    if (!settings?.audio_enabled || !replyText) return;
+
+    try {
+      const audioData = await generateReplyAudio.mutateAsync({
+        text: replyText,
+        voice: settings?.tts_voice || "lola",
+      });
+
+      if (!audioData?.audio_url) return;
+
+      if (assistantAudioRef.current) {
+        assistantAudioRef.current.pause();
+        assistantAudioRef.current.currentTime = 0;
+      }
+
+      const audio = new Audio(audioData.audio_url);
+      assistantAudioRef.current = audio;
+      await audio.play();
+    } catch {
+      // keep chat reply even if voice generation fails
+    }
   };
 
   const ensureClientId = async (personName) => {
@@ -126,12 +165,9 @@ export function SecretaryPage() {
     return created?.client?.id || created?.id;
   };
 
-  const handleSendText = async () => {
-    const text = inputValue.trim();
+  const submitSecretaryText = async (rawText) => {
+    const text = String(rawText || "").trim();
     if (!text) return;
-    setInputValue("");
-    
-    // Optimistic user message insertion
     addMessage({ sender: "user", text });
     
     setAiThinking(true);
@@ -140,9 +176,19 @@ export function SecretaryPage() {
       const parsed = result.parsed || {};
       const intent = parsed.intent;
       const normalizedTime = normalizeToIso(parsed.datetimeIso);
+      const monthlySalary = Number(parsed.monthlySalary || 0);
       let replyText = parsed.reply || "Tushunarli.";
 
-      if (intent === "meeting") {
+      if (Number.isFinite(monthlySalary) && monthlySalary > 0) {
+        setPendingMeeting(null);
+        try {
+          await updateSettings.mutateAsync({ monthly_salary: monthlySalary });
+          replyText =
+            parsed.reply || `Tushundim, oylik maoshingiz ${monthlySalary.toLocaleString("uz-UZ")} so'm qilib saqlandi.`;
+        } catch (e) {
+          replyText = "Kechirasiz, oylik maoshni saqlashda xatolik yuz berdi.";
+        }
+      } else if (intent === "meeting") {
         setPendingMeeting(null);
         try {
           const personName = parsed.person;
@@ -155,8 +201,8 @@ export function SecretaryPage() {
             meeting_datetime: scheduledTime,
             client_id: clientId,
             auto_message_enabled: true,
-            enable_audio_reminder: true,
-            reminder_interval: settings?.reminder_interval || "1min"
+            enable_audio_reminder: false,
+            reminder_interval: null,
           });
         } catch (e) {
           replyText = "Kechirasiz, uchrashuvni tizimga saqlashda xatolik yuz berdi.";
@@ -169,11 +215,45 @@ export function SecretaryPage() {
             await createExpense.mutateAsync({
               amount: Number(expenseData.amount),
               category: expenseData.title || expenseData.category || "Boshqa",
-              date: expenseData.date || new Date().toISOString().split("T")[0]
+              date: expenseData.date || new Date().toISOString().split("T")[0],
+              currency: expenseData.currency || "UZS",
+              title: expenseData.title || parsed.title || text,
+              note: parsed.note || result.cleanedText || text,
             });
           }
         } catch (e) {
           replyText = "Kechirasiz, xarajatni saqlashda xatolik yuz berdi.";
+        }
+      } else if (intent === "reminder" || intent === "task") {
+        setPendingMeeting(null);
+        try {
+          const hasDateTime = Boolean(normalizedTime);
+          const recurrence = parsed.recurrence || "none";
+          const frequency = mapRecurrenceToFrequency(recurrence);
+          await createReminder.mutateAsync({
+            title: parsed.title || (text.length > 30 ? `${text.slice(0, 30)}...` : text),
+            original_text: result.originalText || text,
+            cleaned_text: result.cleanedText || text,
+            next_run_at: hasDateTime ? normalizedTime : "2099-01-01T09:00:00.000Z",
+            tts_voice: settings?.tts_voice || "lola",
+            ...frequency,
+            status: hasDateTime ? "active" : "paused",
+            parsed_data: {
+              intent: "reminder",
+              task_intent: intent,
+            recurrence,
+            has_date: hasDateTime,
+            has_time: hasDateTime,
+            reminder_message: parsed.reminderMessage || parsed.note || parsed.title || text,
+            reminder_audio_text: parsed.reminderMessage || parsed.note || parsed.title || text,
+            tts_voice: settings?.tts_voice || "lola",
+          },
+        });
+        replyText = parsed.reply || (intent === "task" ? "Vazifa saqlandi." : "Eslatma saqlandi.");
+        } catch (e) {
+          replyText = intent === "task"
+            ? "Kechirasiz, vazifani saqlashda xatolik yuz berdi."
+            : "Kechirasiz, eslatmani saqlashda xatolik yuz berdi.";
         }
       } else if (intent === "incomplete_meeting") {
         setPendingMeeting({ datetimeIso: parsed.datetimeIso });
@@ -181,7 +261,7 @@ export function SecretaryPage() {
         setPendingMeeting(null);
       }
 
-      // Add bot message instantly
+      await playAssistantReply(replyText);
       addMessage({ sender: "bot", text: replyText });
 
     } catch (error) {
@@ -189,6 +269,13 @@ export function SecretaryPage() {
     } finally {
       setAiThinking(false);
     }
+  };
+
+  const handleSendText = async () => {
+    const text = inputValue.trim();
+    if (!text) return;
+    setInputValue("");
+    await submitSecretaryText(text);
   };
 
   const startRecording = async () => {
@@ -216,7 +303,7 @@ export function SecretaryPage() {
           const result = await transcribeMutation.mutateAsync({ audioBase64 });
           const textReceived = result.text || "";
           if (textReceived) {
-             setInputValue(prev => prev ? `${prev} ${textReceived}` : textReceived);
+            setInputValue((prev) => (prev ? `${prev} ${textReceived}`.trim() : textReceived));
           }
         } catch (error) {
           addMessage({ sender: "bot", text: "Ovozdan matnga aylantirishda xatolik yuz berdi." });

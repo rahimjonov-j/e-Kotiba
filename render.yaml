@@ -22,10 +22,10 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: GEMINI_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
-      - key: GEMINI_MODEL
-        value: gemini-1.5-flash
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
       - key: UZBEKVOICE_STT_URL
         value: https://uzbekvoice.ai/api/v1/stt
       - key: UZBEKVOICE_STT_API_KEY
@@ -40,3 +40,7 @@ services:
         value: "*/5 * * * *"
       - key: MEETING_AUDIO_REMINDER_CRON
         value: "*/1 * * * *"
+      - key: SESSION_TTL_HOURS
+        value: "720"
+      - key: SESSION_COOKIE_NAME
+        value: kotiba_session

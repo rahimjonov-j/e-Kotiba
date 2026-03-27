@@ -23,15 +23,18 @@ export const env = {
   supabaseUrl: process.env.SUPABASE_URL || "",
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-  geminiApiKey: process.env.GEMINI_API_KEY || "",
-  geminiModel: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+  openAiApiKey: process.env.OPENAI_API_KEY || "",
+  openAiModel: process.env.OPENAI_MODEL || "gpt-4.1-mini",
   uzbekVoiceSttUrl: process.env.UZBEKVOICE_STT_URL || "",
   uzbekVoiceSttApiKey: process.env.UZBEKVOICE_STT_API_KEY || process.env.UZBEKVOICE_API_KEY || "",
   uzbekVoiceTtsUrl: process.env.UZBEKVOICE_TTS_URL || "",
   uzbekVoiceTtsApiKey: process.env.UZBEKVOICE_TTS_API_KEY || process.env.UZBEKVOICE_API_KEY || "",
+  cbuExchangeRatesUrl: process.env.CBU_EXCHANGE_RATES_URL || "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
   reminderJobCron: process.env.REMINDER_JOB_CRON || "*/1 * * * *",
   meetingJobCron: process.env.MEETING_JOB_CRON || "*/5 * * * *",
   meetingAudioReminderCron: process.env.MEETING_AUDIO_REMINDER_CRON || "*/1 * * * *",
+  sessionTtlHours: Number(process.env.SESSION_TTL_HOURS || 720),
+  sessionCookieName: process.env.SESSION_COOKIE_NAME || "kotiba_session",
 };
 
 export const assertRequiredEnv = () => {
@@ -47,6 +50,10 @@ export const assertRequiredEnv = () => {
 
   if ((env.uzbekVoiceTtsUrl && !env.uzbekVoiceTtsApiKey) || (!env.uzbekVoiceTtsUrl && env.uzbekVoiceTtsApiKey)) {
     console.warn("TTS configuration is incomplete. Set both UZBEKVOICE_TTS_URL and UZBEKVOICE_TTS_API_KEY (or UZBEKVOICE_API_KEY).");
+  }
+
+  if (!env.openAiApiKey) {
+    console.warn("OPENAI_API_KEY is missing. OpenAI parsing will not work.");
   }
 
 };

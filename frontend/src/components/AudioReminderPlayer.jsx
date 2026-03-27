@@ -1,25 +1,72 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
-import { useMarkNotificationRead, useNotifications } from "../hooks/useApi";
+import { useNotifications } from "../hooks/useApi";
+
+const BROWSER_NOTIFICATION_KEY = "kotiba-browser-notifications";
+const PLAYED_AUDIO_KEY = "kotiba-played-notification-audio";
+
+const canUseBrowserNotifications = () =>
+  typeof window !== "undefined" && "Notification" in window;
+
+const getStoredShownIds = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(BROWSER_NOTIFICATION_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+};
+
+const persistShownIds = (ids) => {
+  localStorage.setItem(BROWSER_NOTIFICATION_KEY, JSON.stringify(Array.from(ids)));
+};
+
+const getStoredPlayedIds = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(PLAYED_AUDIO_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+};
+
+const persistPlayedIds = (ids) => {
+  localStorage.setItem(PLAYED_AUDIO_KEY, JSON.stringify(Array.from(ids)));
+};
+
+const normalizeNotificationText = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/[.!?]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export function AudioReminderPlayer() {
   const { data } = useNotifications();
-  const markRead = useMarkNotificationRead();
   const audioRef = useRef(null);
-  const playedRef = useRef(new Set());
+  const playedAudioRef = useRef(getStoredPlayedIds());
+  const shownNotificationRef = useRef(getStoredShownIds());
   const [blockedNotification, setBlockedNotification] = useState(null);
+
   const playNotificationSound = async () => {
-    try {
-      const audio = new Audio('/notification.mp3');
-      await audio.play();
-    } catch {
-      return Promise.reject(new Error("notification sound failed"));
-    }
+    const audio = new Audio("/notification.mp3");
+    await audio.play();
   };
 
   useEffect(() => {
+    if (!canUseBrowserNotifications()) return undefined;
+
+    const requestPermission = () => {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    };
+
+    window.addEventListener("pointerdown", requestPermission, { once: true });
+    return () => window.removeEventListener("pointerdown", requestPermission);
+  }, []);
+
+  useEffect(() => {
     const items = data?.items || [];
-    const candidate = items.find((item) => !item.is_read && !playedRef.current.has(item.id));
+    const candidate = items.find((item) => !item.is_read && !playedAudioRef.current.has(item.id));
     if (!candidate) return;
 
     const playAudio = async () => {
@@ -37,14 +84,48 @@ export function AudioReminderPlayer() {
           await playNotificationSound();
         }
 
-        playedRef.current.add(candidate.id);
-        // User strictly requested NOT to mark as read automatically here
+        playedAudioRef.current.add(candidate.id);
+        persistPlayedIds(playedAudioRef.current);
       } catch {
         setBlockedNotification(candidate);
       }
     };
 
     playAudio();
+  }, [data]);
+
+  useEffect(() => {
+    if (!canUseBrowserNotifications()) return;
+
+    const items = data?.items || [];
+    const candidate = items.find((item) => !item.is_read && !shownNotificationRef.current.has(item.id));
+    if (!candidate) return;
+
+    const shouldShowBrowserNotification =
+      Notification.permission === "granted" &&
+      (document.visibilityState !== "visible" || !document.hasFocus());
+
+    if (!shouldShowBrowserNotification) return;
+
+    const title = candidate.title || "Yangi eslatma";
+    const body = candidate.message || candidate.body || "Sizda yangi bildirishnoma bor.";
+    const normalizedTitle = normalizeNotificationText(title);
+    const normalizedBody = normalizeNotificationText(body);
+
+    const notification = new Notification(title, {
+      body: normalizedTitle && normalizedTitle === normalizedBody ? "Sizda yangi bildirishnoma bor." : body,
+      tag: `kotiba-${candidate.id}`,
+      renotify: false,
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      window.location.href = "/reminders";
+      notification.close();
+    };
+
+    shownNotificationRef.current.add(candidate.id);
+    persistShownIds(shownNotificationRef.current);
   }, [data]);
 
   const handleManualPlay = async () => {
@@ -64,8 +145,8 @@ export function AudioReminderPlayer() {
         await playNotificationSound();
       }
 
-      playedRef.current.add(blockedNotification.id);
-      // Removed markRead.mutateAsync to ensure notifications remain unread
+      playedAudioRef.current.add(blockedNotification.id);
+      persistPlayedIds(playedAudioRef.current);
       setBlockedNotification(null);
     } catch {
       // keep button visible
@@ -75,10 +156,10 @@ export function AudioReminderPlayer() {
   if (!blockedNotification) return null;
 
   return (
-    <div className="fixed bottom-16 right-3 z-40 w-[min(340px,calc(100%-1.5rem))] rounded-xl border border-border bg-card p-3 shadow-soft md:bottom-4">
-      <p className="text-sm font-medium">Audio reminder available</p>
+    <div className="fixed bottom-16 left-1/2 z-40 w-[min(340px,calc(100%-1.5rem))] -translate-x-1/2 rounded-xl border border-border bg-card p-3 shadow-soft">
+      <p className="text-sm font-medium">Ovozli eslatma tayyor</p>
       <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{blockedNotification.message}</p>
-      <Button className="mt-2 w-full" onClick={handleManualPlay}>Play reminder</Button>
+      <Button className="mt-2 w-full" onClick={handleManualPlay}>Ovozni chalish</Button>
     </div>
   );
 }

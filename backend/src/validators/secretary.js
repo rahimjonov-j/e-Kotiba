@@ -9,3 +9,8 @@ export const secretaryInputSchema = z
   .refine((value) => value.audioBase64 || value.text, {
     message: "audioBase64 or text is required",
   });
+
+export const secretaryReplyAudioSchema = z.object({
+  text: z.string().min(2),
+  voice: z.string().trim().min(1).optional(),
+});

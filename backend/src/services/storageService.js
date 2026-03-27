@@ -5,8 +5,38 @@ import { AppError } from "../utils/errors.js";
 import { generateTtsAudio } from "./aiService.js";
 
 const BUCKET = "reminder-audio";
+let bucketReadyPromise = null;
+
+const ensureReminderAudioBucket = async () => {
+  if (!bucketReadyPromise) {
+    bucketReadyPromise = (async () => {
+      const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
+      if (listError) {
+        throw new AppError(`Failed to inspect storage buckets: ${listError.message}`, 500);
+      }
+
+      const exists = Array.isArray(buckets) && buckets.some((bucket) => bucket.name === BUCKET || bucket.id === BUCKET);
+      if (exists) return;
+
+      const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET, {
+        public: true,
+        fileSizeLimit: "25MB",
+      });
+
+      if (createError && !String(createError.message || "").toLowerCase().includes("already exists")) {
+        throw new AppError(`Failed to create storage bucket '${BUCKET}': ${createError.message}`, 500);
+      }
+    })().catch((error) => {
+      bucketReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return bucketReadyPromise;
+};
 
 export const uploadReminderAudio = async ({ userId, audioBase64 }) => {
+  await ensureReminderAudioBucket();
   const path = `${userId}/${randomUUID()}.mp3`;
   const binary = Buffer.from(audioBase64, "base64");
 
@@ -34,6 +64,7 @@ export const getStaticReminderUrl = async () => {
   if (staticReminderFetchAttempted) return null;
 
   staticReminderFetchAttempted = true;
+  await ensureReminderAudioBucket();
 
   const path = `system/static_reminder.mp3`;
 

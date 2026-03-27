@@ -1,4 +1,4 @@
-import { transcribeAudio, processWithGemini } from "./aiService.js";
+import { transcribeAudio, processWithOpenAi } from "./aiService.js";
 import { AppError } from "../utils/errors.js";
 
 export const runSecretaryPipeline = async ({ audioBase64, text, timezone = "Asia/Tashkent", context = {} }) => {
@@ -14,7 +14,7 @@ export const runSecretaryPipeline = async ({ audioBase64, text, timezone = "Asia
     throw new AppError("Input text is empty after transcription", 422);
   }
 
-  const aiOutput = await processWithGemini({
+  const aiOutput = await processWithOpenAi({
     rawText: originalText,
     mode: "reminder_extraction",
     context: { timezone, ...context },
@@ -24,9 +24,13 @@ export const runSecretaryPipeline = async ({ audioBase64, text, timezone = "Asia
     originalText,
     cleanedText: aiOutput.cleaned_text || originalText,
     parsed: {
-      intent: aiOutput.intent || "note",
+      intent: aiOutput.intent || "unknown",
       title: aiOutput.meeting?.title || aiOutput.expense?.title || aiOutput.title || "Reminder",
+      note: aiOutput.note || aiOutput.cleaned_text || originalText,
       datetimeIso: aiOutput.meeting?.datetime || aiOutput.datetime_iso || aiOutput.datetime || null,
+      monthlySalary: aiOutput.monthly_salary ?? null,
+      recurrence: aiOutput.recurrence || "none",
+      reminderMessage: aiOutput.reminder_message || aiOutput.note || aiOutput.title || null,
       person: aiOutput.meeting?.person || aiOutput.person || null,
       expense: aiOutput.expense || null,
       frequencyValue: aiOutput.frequency?.value ?? null,
