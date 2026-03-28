@@ -57,6 +57,25 @@ body {
   display: none;
 }
 
+@keyframes route-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.992);
+    filter: blur(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.route-transition {
+  animation: route-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity, filter;
+}
+
 @media (min-width: 768px) {
   body {
     padding: 16px;
@@ -82,17 +101,4 @@ body {
       0 14px 36px rgba(15, 23, 42, 0.12);
   }
 
-  .app-phone-shell::before {
-    content: "";
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 24px;
-    border-radius: 9999px;
-    background: rgba(15, 23, 42, 0.12);
-    z-index: 60;
-    pointer-events: none;
-  }
 }

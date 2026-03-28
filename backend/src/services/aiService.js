@@ -387,6 +387,8 @@ const inferRelativeDateTime = (text) => {
   return target.toISOString();
 };
 
+const hasExplicitRelativeDateTime = (text) => Boolean(inferRelativeDateTime(text));
+
 const buildReminderMessage = ({ title, cleanedText }) => {
   return buildDueReminderText(title || cleanedText, cleanedText || title);
 };
@@ -443,6 +445,7 @@ Qoidalar:
 5) Sana/vaqtni imkon qadar ISO formatga o'tkaz.
 6) Vaqt aytilmagan bo'lsa datetime null qoldir.
 7) Recurrence qiymati faqat: "none", "daily", "weekly", "monthly".
+8) Agar foydalanuvchi "5 minutdan keyin", "6 daqiqadan keyin", "2 soatdan keyin" desa, aynan shu muddatni saqla. Uni 1 minutga yoki boshqa taxminiy vaqtga o'zgartirma.
 
 JSON shakli:
 {
@@ -468,6 +471,7 @@ Maxsus qoida:
 - reminder_message foydalanuvchiga ikkinchi shaxsdagi tabiiy eslatma bo'lsin.
 - Birinchi shaxs shakllarini ishlatma: "borishim kerak", "do'stlarim", "menga eslat".
 - To'g'ri misol: "Do'stlaringiz bilan futbolga borish vaqti bo'ldi."
+- To'g'ri misol: "5 minutdan keyin eslat" bo'lsa datetime aynan hozirgi vaqtdan 5 minut keyin bo'lishi kerak.
 Matn: ${rawText}`;
 };
 
@@ -580,7 +584,9 @@ ${rawText}`;
     const hasMonthlySalary = Number.isFinite(monthlySalary) && monthlySalary > 0;
 
     const fallbackDateTime = inferRelativeDateTime(rawText);
-    const resolvedDateTime = parsed.meeting?.datetime || parsed.datetime_iso || parsed.datetime || fallbackDateTime || null;
+    const resolvedDateTime = hasExplicitRelativeDateTime(rawText)
+      ? fallbackDateTime
+      : parsed.meeting?.datetime || parsed.datetime_iso || parsed.datetime || fallbackDateTime || null;
     const resolvedTitle = parsed.meeting?.title || parsed.expense?.title || parsed.title || "Yangi eslatma";
     const resolvedCleanedText = parsed.cleaned_text || resolvedTitle || String(rawText || "").trim();
     const resolvedReminderMessage =

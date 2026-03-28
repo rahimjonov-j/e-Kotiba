@@ -54,7 +54,7 @@ export function AppLayout({ children }) {
     .filter(Boolean);
 
   return (
-    <div className="app-shell-root min-h-[100dvh] md:min-h-[calc(100vh-32px)]">
+    <div className="app-shell-root flex h-[100dvh] flex-col overflow-hidden md:h-[calc(100vh-32px)]">
       {welcomeMessage ? (
         <div className="fixed left-1/2 top-16 z-40 max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full border border-emerald-200 bg-white/95 px-4 py-2 text-sm font-medium text-emerald-700 shadow-[0_12px_30px_rgba(16,185,129,0.15)] backdrop-blur">
           {welcomeMessage}
@@ -63,22 +63,36 @@ export function AppLayout({ children }) {
 
       <header className="sticky top-0 z-20 border-b border-border/70 bg-background/90 backdrop-blur">
         <div className="flex w-full items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-[#149B7A]">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100/50 text-[#149B7A] overflow-hidden border border-teal-200 shadow-sm">
+          <Link to="/" className="flex items-center gap-2 rounded-2xl bg-white/55 px-2.5 py-1.5 text-lg font-semibold text-[#149B7A] shadow-[0_10px_24px_rgba(15,23,42,0.06)] backdrop-blur">
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-teal-200 bg-teal-100/60 text-[#149B7A] shadow-[0_8px_18px_rgba(20,184,166,0.14)]">
               <img src="/asalxon_avatar.png?v=3" alt="Asalxon" className="w-full h-full object-cover" />
             </div>
-            Asalxon
+            <span className="tracking-tight">Asalxon</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline" className="h-10 w-10 p-0" aria-label={t("nav_reminders")}>
+            <Button
+              asChild
+              variant="outline"
+              className={`h-11 w-11 rounded-2xl border p-0 backdrop-blur transition-all duration-200 ${
+                unreadCount > 0
+                  ? "border-emerald-200 bg-white/90 text-[#149B7A] shadow-[0_12px_28px_rgba(20,155,122,0.18)]"
+                  : "border-slate-200/80 bg-white/82 text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+              }`}
+              aria-label={t("nav_reminders")}
+            >
               <Link to="/reminders">
                 <span className="relative inline-flex">
-                  <Bell size={18} className="text-[#149B7A]" />
+                  <Bell size={18} className={unreadCount > 0 ? "text-[#149B7A]" : "text-slate-600"} />
                   {unreadCount > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">{unreadCount}</span>}
                 </span>
               </Link>
             </Button>
-            <Button asChild variant="outline" className="h-10 w-10 p-0" aria-label={t("nav_settings")}>
+            <Button
+              asChild
+              variant="outline"
+              className="h-11 w-11 rounded-2xl border border-slate-200/80 bg-white/82 p-0 text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.06)] backdrop-blur transition-all duration-200 hover:bg-white"
+              aria-label={t("nav_settings")}
+            >
               <Link to="/settings">
                 <Settings size={18} className="text-slate-600" />
               </Link>
@@ -87,11 +101,15 @@ export function AppLayout({ children }) {
         </div>
       </header>
 
-      <div className={`w-full ${isSecretary ? "pt-0 pb-[72px]" : "p-4 pb-24"}`}>
-        <main className={`min-w-0 animate-fade-in ${isSecretary ? "h-[calc(100dvh-138px)] md:h-[calc(100vh-170px)] min-h-0 relative" : "space-y-4"}`}>{children}</main>
+      <div className={`w-full min-h-0 flex-1 ${isSecretary ? "pt-0 pb-[72px]" : "p-4 pb-24"}`}>
+        <main className={`min-w-0 h-full ${isSecretary ? "min-h-0 relative overflow-hidden" : "space-y-4 overflow-y-auto"}`}>
+          <div key={location.pathname} className="route-transition h-full">
+            {children}
+          </div>
+        </main>
       </div>
 
-      <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[460px] -translate-x-1/2 border-t border-border/70 bg-background/95 px-3 pb-3 pt-2 backdrop-blur">
+      <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[460px] -translate-x-1/2 bg-[#e9efef]/96 px-2 pb-2 pt-3 shadow-[0_-10px_28px_rgba(15,23,42,0.05)] backdrop-blur">
         <div
           className="mx-auto grid w-full max-w-md gap-2"
           style={{ gridTemplateColumns: `repeat(${mobileItems.length || 1}, minmax(0, 1fr))` }}
@@ -105,8 +123,8 @@ export function AppLayout({ children }) {
                 className={({ isActive }) =>
                   `flex min-h-[60px] w-full flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-medium transition-all duration-200 ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-[0_12px_24px_rgba(20,155,122,0.24)]"
-                      : "text-muted-foreground hover:bg-slate-100/80"
+                      ? "bg-primary text-primary-foreground shadow-[0_14px_32px_rgba(20,155,122,0.28),0_0_0_1px_rgba(255,255,255,0.14)_inset]"
+                      : "text-slate-400 hover:bg-slate-100/70 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800/70 dark:hover:text-slate-200"
                   }`
                 }
               >
@@ -121,6 +139,7 @@ export function AppLayout({ children }) {
             );
           })}
         </div>
+        <div className="pointer-events-none mx-auto mt-2 h-1 w-24 rounded-full bg-slate-900/8 dark:bg-white/15" />
       </nav>
 
       <AudioReminderPlayer />

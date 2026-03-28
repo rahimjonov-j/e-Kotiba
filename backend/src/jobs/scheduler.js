@@ -6,6 +6,10 @@ import { generateTtsAudio } from "../services/aiService.js";
 import { uploadReminderAudio, getStaticReminderUrl } from "../services/storageService.js";
 import { getAuthSchemaMode, extractUserName } from "../utils/userCompat.js";
 import { buildDueReminderText } from "../utils/reminderText.js";
+
+const REMINDER_NOTIFICATION_LEAD_MS = 10 * 1000;
+const FAST_REMINDER_SWEEP_CRON = "*/10 * * * * *";
+
 const isMissingMeetingAudioColumns = (error) =>
   error?.code === "PGRST204" &&
   (String(error?.message || "").includes("enable_audio_reminder") ||
@@ -272,15 +276,15 @@ const processMeetingJob = async (job) => {
   await finishJob(job.id, "completed");
 };
 
-const processPendingJobs = async (jobType) => {
-  const now = new Date().toISOString();
+const processPendingJobs = async (jobType, leadMs = 0) => {
+  const cutoff = new Date(Date.now() + Math.max(0, Number(leadMs) || 0)).toISOString();
 
   const result = await supabaseAdmin
     .from("system_jobs")
     .select("*")
     .eq("status", "pending")
     .eq("job_type", jobType)
-    .lte("scheduled_for", now)
+    .lte("scheduled_for", cutoff)
     .order("scheduled_for", { ascending: true })
     .limit(20);
 
@@ -370,8 +374,8 @@ const runMeetingAudioReminderSweep = async () => {
 };
 
 export const startSchedulers = () => {
-  cron.schedule(env.reminderJobCron, async () => {
-    await processPendingJobs("reminder_trigger");
+  cron.schedule(FAST_REMINDER_SWEEP_CRON, async () => {
+    await processPendingJobs("reminder_trigger", REMINDER_NOTIFICATION_LEAD_MS);
   });
 
   cron.schedule(env.meetingJobCron, async () => {

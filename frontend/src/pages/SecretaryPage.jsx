@@ -348,7 +348,7 @@ export function SecretaryPage() {
       )}
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-36 pt-16">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40 pt-16">
         <div className="flex flex-col items-center mb-6 relative group">
           <div className="flex items-center gap-2.5 bg-white rounded-full px-2.5 py-1.5 shadow-sm mb-4 border border-teal-100/50 hover:border-teal-200 transition-colors">
             <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-teal-100/80 shadow-inner group-hover:scale-105 transition-transform">
@@ -366,7 +366,7 @@ export function SecretaryPage() {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}>
             <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 mb-1 px-1 uppercase tracking-wider">
-              {msg.sender === "user" ? "SIZ" : "KOTIBA"} • {msg.time}
+              {msg.sender === "user" ? "SIZ" : "ASALXON"} • {msg.time}
             </span>
             <div
               className={`max-w-[85%] md:max-w-[70%] p-3 md:p-4 text-[14px] md:text-[15px] leading-relaxed relative ${
@@ -383,7 +383,7 @@ export function SecretaryPage() {
         {aiThinking && (
            <div className="flex flex-col items-start">
              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 mb-1 px-1 uppercase tracking-wider">
-               KOTIBA • {new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+               ASALXON • {new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
              </span>
              <div className="bg-white px-4 py-3.5 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 inline-flex items-center gap-1.5 h-10">
                 <div className="w-1.5 h-1.5 bg-slate-400/80 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
@@ -396,80 +396,85 @@ export function SecretaryPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested actions (hide if input is focused or processing) */}
-      <div className="absolute bottom-[72px] left-0 w-full px-4 overflow-x-auto no-scrollbar pointer-events-none">
-        <div className="flex gap-2 pointer-events-auto w-max mb-2">
-            <button 
-              onClick={() => { setInputValue("Bugun 15:00 da uchrashuv belgilab ber"); }}
-              className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap">
-              <Calendar size={16} className="text-slate-400" />
-              Uchrashuv belgilash
-            </button>
-        </div>
-      </div>
-
-      {/* Input Area */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[#f3f4f6] p-3 border-t border-slate-200 flex items-center gap-2 md:gap-3 z-10">
-        <button className="text-slate-500 hover:text-slate-700 p-2 shrink-0 hidden md:block">
-          <Paperclip size={22} />
-        </button>
-        
-        <div className="flex-1 h-12 bg-white rounded-full border border-slate-200 flex items-center px-4 relative transition-colors focus-within:border-[#149B7A] focus-within:ring-1 focus-within:ring-[#149B7A] overflow-hidden">
-          
-          {voiceState === "transcribing" ? (
-             <div className="flex-1 flex items-center gap-2 text-slate-400">
-                <Loader2 size={16} className="animate-spin text-[#149B7A]" />
-                <span className="text-[14.5px]">Ovoz aniqlanmoqda...</span>
-             </div>
-          ) : (
-            <>
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSendText();
-                }}
-                placeholder={voiceState === "recording" ? "Eshitilmoqda..." : "Xabar yozing..."}
-                className={`flex-1 bg-transparent border-none focus:outline-none py-3 text-[15px] ${voiceState === "recording" ? "text-red-500 placeholder-red-400 animate-pulse" : "placeholder-slate-400"}`}
-                disabled={aiThinking || voiceState === "recording"}
-              />
+      <div className="absolute bottom-[23px] left-0 right-0 z-10 px-3">
+        <div className="flex flex-col gap-2">
+          <div className="overflow-x-auto no-scrollbar pointer-events-none">
+            <div className="flex w-max gap-2 pointer-events-auto">
               <button
-                onPointerDown={startRecording}
-                onPointerUp={stopRecording}
-                onPointerLeave={stopRecording}
-                onPointerCancel={stopRecording}
-                disabled={aiThinking || voiceState === "recording"}
-                className={`p-2 transition-colors ${voiceState === "recording" ? "text-red-500 scale-110" : "text-slate-400 hover:text-slate-600"}`}
+                onClick={() => {
+                  setInputValue("Bugun 15:00 da uchrashuv belgilab ber");
+                }}
+                className="flex items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-colors hover:bg-slate-50"
               >
-                <Mic size={20} />
+                <Calendar size={16} className="text-slate-400" />
+                Uchrashuv belgilash
               </button>
-            </>
-          )}
+            </div>
+          </div>
 
-        </div>
+          <div className="flex items-center gap-2 md:gap-3">
+            <button className="hidden shrink-0 p-2 text-slate-500 hover:text-slate-700 md:block">
+              <Paperclip size={22} />
+            </button>
 
-        <div className="relative flex items-center justify-center shrink-0 w-12 h-12">
-          {voiceState === "recording" && (
-            <div className="absolute inset-0 rounded-full bg-red-400/40 animate-ping" style={{ animationDuration: '1.5s' }} />
-          )}
-          <button 
-              onClick={voiceState === 'recording' ? stopRecording : handleSendText}
-              disabled={aiThinking || voiceState === "transcribing" || (!inputValue.trim() && voiceState !== "recording")}
-              className={`relative w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-sm z-10 ${
-                voiceState === "recording" 
-                  ? "bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-pulse" 
-                  : !inputValue.trim() 
-                    ? "bg-slate-300 pointer-events-none opacity-80" 
-                    : "bg-[#149B7A] hover:bg-[#107c62] shadow-[0_4px_10px_rgba(20,155,122,0.3)]"
-              }`}
-          >
-            {voiceState === "recording" ? (
-               <div className="w-4 h-4 rounded-sm bg-white" /> 
-            ) : (
-               <Send size={18} className="translate-x-[2px] translate-y-[-1px]" /> 
-            )}
-          </button>
+            <div className="relative flex h-[52px] flex-1 items-center overflow-hidden rounded-full border border-slate-200 bg-white px-5 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-colors focus-within:border-[#149B7A] focus-within:ring-1 focus-within:ring-[#149B7A]">
+              {voiceState === "transcribing" ? (
+                <div className="flex flex-1 items-center gap-2 text-slate-400">
+                  <Loader2 size={16} className="animate-spin text-[#149B7A]" />
+                  <span className="text-[14.5px]">Ovoz aniqlanmoqda...</span>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSendText();
+                    }}
+                    placeholder={voiceState === "recording" ? "Eshitilmoqda..." : "Xabar yozing..."}
+                    className={`flex-1 border-none bg-transparent py-3 text-[15px] focus:outline-none ${
+                      voiceState === "recording" ? "animate-pulse text-red-500 placeholder-red-400" : "placeholder-slate-400"
+                    }`}
+                    disabled={aiThinking || voiceState === "recording"}
+                  />
+                  <button
+                    onPointerDown={startRecording}
+                    onPointerUp={stopRecording}
+                    onPointerLeave={stopRecording}
+                    onPointerCancel={stopRecording}
+                    disabled={aiThinking || voiceState === "recording"}
+                    className={`p-2 transition-colors ${voiceState === "recording" ? "scale-110 text-red-500" : "text-slate-400 hover:text-slate-600"}`}
+                  >
+                    <Mic size={20} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="relative flex h-[52px] w-[52px] shrink-0 items-center justify-center">
+              {voiceState === "recording" && (
+                <div className="absolute inset-0 animate-ping rounded-full bg-red-400/40" style={{ animationDuration: "1.5s" }} />
+              )}
+              <button
+                onClick={voiceState === "recording" ? stopRecording : handleSendText}
+                disabled={aiThinking || voiceState === "transcribing" || (!inputValue.trim() && voiceState !== "recording")}
+                className={`relative z-10 flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-sm transition-all ${
+                  voiceState === "recording"
+                    ? "animate-pulse bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)]"
+                    : !inputValue.trim()
+                      ? "pointer-events-none bg-slate-300 opacity-80"
+                      : "bg-[#149B7A] shadow-[0_8px_18px_rgba(20,155,122,0.24)] hover:bg-[#107c62]"
+                }`}
+              >
+                {voiceState === "recording" ? (
+                  <div className="h-4 w-4 rounded-sm bg-white" />
+                ) : (
+                  <Send size={18} className="translate-x-[2px] translate-y-[-1px]" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
