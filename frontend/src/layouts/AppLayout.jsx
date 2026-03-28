@@ -3,6 +3,7 @@ import { LayoutDashboard, Mic2, Bell, CalendarDays, WalletCards, Settings, Shiel
 import { Button } from "../components/ui/button";
 import { useI18n } from "../hooks/useI18n";
 import { AudioReminderPlayer } from "../components/AudioReminderPlayer";
+import { PushBootstrap } from "../components/PushBootstrap";
 import { useNotifications, useProfile } from "../hooks/useApi";
 import { useEffect, useRef, useState } from "react";
 
@@ -54,7 +55,7 @@ export function AppLayout({ children }) {
     .filter(Boolean);
 
   return (
-    <div className="app-shell-root flex h-[100dvh] flex-col overflow-hidden md:h-[calc(100vh-32px)]">
+    <div className="app-shell-root relative flex h-[100dvh] flex-col overflow-hidden md:h-[calc(100vh-32px)]">
       {welcomeMessage ? (
         <div className="fixed left-1/2 top-16 z-40 max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full border border-emerald-200 bg-white/95 px-4 py-2 text-sm font-medium text-emerald-700 shadow-[0_12px_30px_rgba(16,185,129,0.15)] backdrop-blur">
           {welcomeMessage}
@@ -109,7 +110,7 @@ export function AppLayout({ children }) {
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-[460px] -translate-x-1/2 bg-[#e9efef]/96 px-2 pb-2 pt-3 shadow-[0_-10px_28px_rgba(15,23,42,0.05)] backdrop-blur">
+      <nav className="absolute bottom-0 left-0 right-0 z-30 bg-[#e6eded]/98 px-2 pb-2 pt-3 shadow-[0_-8px_20px_rgba(15,23,42,0.04)] backdrop-blur">
         <div
           className="mx-auto grid w-full max-w-md gap-2"
           style={{ gridTemplateColumns: `repeat(${mobileItems.length || 1}, minmax(0, 1fr))` }}
@@ -143,6 +144,7 @@ export function AppLayout({ children }) {
       </nav>
 
       <AudioReminderPlayer />
+      <PushBootstrap />
     </div>
   );
 }

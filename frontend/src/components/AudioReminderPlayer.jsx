@@ -39,12 +39,18 @@ const normalizeNotificationText = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const isAppInForeground = () => {
+  if (typeof document === "undefined" || typeof window === "undefined") return true;
+  return document.visibilityState === "visible" && document.hasFocus();
+};
+
 export function AudioReminderPlayer() {
   const { data } = useNotifications();
   const audioRef = useRef(null);
   const playedAudioRef = useRef(getStoredPlayedIds());
   const shownNotificationRef = useRef(getStoredShownIds());
   const [blockedNotification, setBlockedNotification] = useState(null);
+  const [isForeground, setIsForeground] = useState(isAppInForeground);
 
   const playNotificationSound = async () => {
     const audio = new Audio("/notification.mp3");
@@ -52,19 +58,28 @@ export function AudioReminderPlayer() {
   };
 
   useEffect(() => {
-    if (!canUseBrowserNotifications()) return undefined;
+    if (typeof window === "undefined" || typeof document === "undefined") return undefined;
 
-    const requestPermission = () => {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().catch(() => {});
-      }
+    const syncForegroundState = () => {
+      setIsForeground(isAppInForeground());
     };
 
-    window.addEventListener("pointerdown", requestPermission, { once: true });
-    return () => window.removeEventListener("pointerdown", requestPermission);
+    document.addEventListener("visibilitychange", syncForegroundState);
+    window.addEventListener("focus", syncForegroundState);
+    window.addEventListener("blur", syncForegroundState);
+    window.addEventListener("pageshow", syncForegroundState);
+
+    return () => {
+      document.removeEventListener("visibilitychange", syncForegroundState);
+      window.removeEventListener("focus", syncForegroundState);
+      window.removeEventListener("blur", syncForegroundState);
+      window.removeEventListener("pageshow", syncForegroundState);
+    };
   }, []);
 
   useEffect(() => {
+    if (!isForeground) return;
+
     const items = data?.items || [];
     const candidate = items.find((item) => !item.is_read && !playedAudioRef.current.has(item.id));
     if (!candidate) return;
@@ -92,7 +107,57 @@ export function AudioReminderPlayer() {
     };
 
     playAudio();
-  }, [data]);
+  }, [data, isForeground]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return undefined;
+
+    const handleWorkerMessage = async (event) => {
+      if (event.data?.type !== "kotiba-push") return;
+
+      const payload = event.data.payload || {};
+      const notificationId = payload.notificationId;
+
+      if (notificationId) {
+        shownNotificationRef.current.add(notificationId);
+        persistShownIds(shownNotificationRef.current);
+      }
+
+      if (!isAppInForeground()) return;
+      if (notificationId && playedAudioRef.current.has(notificationId)) return;
+
+      try {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+
+        if (payload.audioUrl) {
+          const audio = new Audio(payload.audioUrl);
+          audioRef.current = audio;
+          await audio.play();
+        } else {
+          await playNotificationSound();
+        }
+
+        if (notificationId) {
+          playedAudioRef.current.add(notificationId);
+          persistPlayedIds(playedAudioRef.current);
+        }
+      } catch {
+        if (notificationId) {
+          setBlockedNotification({
+            id: notificationId,
+            message: payload.body || "Sizda yangi bildirishnoma bor.",
+            audio_url: payload.audioUrl || null,
+          });
+        }
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handleWorkerMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", handleWorkerMessage);
+  }, []);
 
   useEffect(() => {
     if (!canUseBrowserNotifications()) return;

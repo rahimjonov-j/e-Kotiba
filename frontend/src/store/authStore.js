@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { api } from "../api/client";
 import { clearStoredAuthToken, setStoredAuthToken } from "../lib/session";
+import { unregisterPushSubscription } from "../lib/pwa";
 
 const getWelcomeKey = (userId) => `kotiba-welcome-shown:${userId}`;
 
@@ -57,6 +58,11 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true });
     const currentUser = get().user;
     try {
+      try {
+        await unregisterPushSubscription();
+      } catch {
+        // push cleanup should not block logout
+      }
       await api.logout();
     } finally {
       clearStoredAuthToken();

@@ -30,6 +30,9 @@ export const env = {
   uzbekVoiceTtsUrl: process.env.UZBEKVOICE_TTS_URL || "",
   uzbekVoiceTtsApiKey: process.env.UZBEKVOICE_TTS_API_KEY || process.env.UZBEKVOICE_API_KEY || "",
   cbuExchangeRatesUrl: process.env.CBU_EXCHANGE_RATES_URL || "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
+  pushVapidPublicKey: process.env.PUSH_VAPID_PUBLIC_KEY || "",
+  pushVapidPrivateKey: process.env.PUSH_VAPID_PRIVATE_KEY || "",
+  pushVapidSubject: process.env.PUSH_VAPID_SUBJECT || "mailto:admin@example.com",
   reminderJobCron: process.env.REMINDER_JOB_CRON || "*/1 * * * *",
   meetingJobCron: process.env.MEETING_JOB_CRON || "*/5 * * * *",
   meetingAudioReminderCron: process.env.MEETING_AUDIO_REMINDER_CRON || "*/1 * * * *",
@@ -54,6 +57,10 @@ export const assertRequiredEnv = () => {
 
   if (!env.openAiApiKey) {
     console.warn("OPENAI_API_KEY is missing. OpenAI parsing will not work.");
+  }
+
+  if ((env.pushVapidPublicKey || env.pushVapidPrivateKey) && !(env.pushVapidPublicKey && env.pushVapidPrivateKey)) {
+    console.warn("Push configuration is incomplete. Set both PUSH_VAPID_PUBLIC_KEY and PUSH_VAPID_PRIVATE_KEY.");
   }
 
 };

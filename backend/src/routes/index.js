@@ -9,6 +9,7 @@ import expenseRoutes from "./expenseRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import notificationRoutes from "./notificationRoutes.js";
+import pushRoutes from "./pushRoutes.js";
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use("/meetings", meetingRoutes);
 router.use("/clients", clientRoutes);
 router.use("/expenses", expenseRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/push", pushRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/admin", adminRoutes);
 

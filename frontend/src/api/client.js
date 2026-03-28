@@ -65,6 +65,9 @@ export const api = {
   createExpense: (payload) => request("/expenses", { method: "POST", body: JSON.stringify(payload) }),
   listNotifications: () => request("/notifications", { method: "GET" }),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: "PATCH" }),
+  getPushPublicKey: () => request("/push/public-key", { method: "GET" }),
+  subscribePush: (payload) => request("/push/subscribe", { method: "POST", body: JSON.stringify(payload) }),
+  unsubscribePush: (payload) => request("/push/subscribe", { method: "DELETE", body: JSON.stringify(payload) }),
   getDashboard: () => request("/dashboard", { method: "GET" }),
   getAdminOverview: () => request("/admin/overview", { method: "GET" }),
 };

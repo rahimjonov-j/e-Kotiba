@@ -5,6 +5,7 @@ import App from "./App";
 import "./styles/globals.css";
 import { useUiStore } from "./store/uiStore";
 import { useSettingsStore } from "./store/settingsStore";
+import { registerAppServiceWorker } from "./lib/pwa";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,10 @@ const ThemeSync = ({ children }) => {
   React.useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+
+  React.useEffect(() => {
+    registerAppServiceWorker().catch(() => {});
+  }, []);
 
   return children;
 };

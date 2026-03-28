@@ -6,6 +6,7 @@ import { generateTtsAudio } from "../services/aiService.js";
 import { uploadReminderAudio, getStaticReminderUrl } from "../services/storageService.js";
 import { getAuthSchemaMode, extractUserName } from "../utils/userCompat.js";
 import { buildDueReminderText } from "../utils/reminderText.js";
+import { sendPushToUser } from "../services/pushService.js";
 
 const REMINDER_NOTIFICATION_LEAD_MS = 10 * 1000;
 const FAST_REMINDER_SWEEP_CRON = "*/10 * * * * *";
@@ -151,6 +152,7 @@ const createNotification = async ({
   scheduledFor = null,
 }) => {
   let finalAudioUrl = audioUrl;
+  let createdNotification = null;
 
   if (!finalAudioUrl && audioText) {
     try {
@@ -169,29 +171,55 @@ const createNotification = async ({
     }
   }
 
-  let result = await supabaseAdmin.from("notifications").insert({
-    user_id: userId,
-    title,
-    message,
-    body: message,
-    audio_url: finalAudioUrl,
-    scheduled_for: scheduledFor,
-    triggered_at: new Date().toISOString(),
-    status: "sent",
-    is_read: false,
-  });
-
-  if (result.error && isMissingNotificationMetaColumns(result.error)) {
-    result = await supabaseAdmin.from("notifications").insert({
+  let result = await supabaseAdmin
+    .from("notifications")
+    .insert({
       user_id: userId,
       title,
       message,
+      body: message,
       audio_url: finalAudioUrl,
+      scheduled_for: scheduledFor,
+      triggered_at: new Date().toISOString(),
+      status: "sent",
       is_read: false,
-    });
+    })
+    .select("id, title, message, body, audio_url, created_at")
+    .single();
+
+  if (result.error && isMissingNotificationMetaColumns(result.error)) {
+    result = await supabaseAdmin
+      .from("notifications")
+      .insert({
+        user_id: userId,
+        title,
+        message,
+        audio_url: finalAudioUrl,
+        is_read: false,
+      })
+      .select("id, title, message, audio_url, created_at")
+      .single();
   }
 
-  assertSupabase(result, "Failed to create notification");
+  createdNotification = assertSupabase(result, "Failed to create notification");
+
+  try {
+    await sendPushToUser({
+      userId,
+      payload: {
+        notificationId: createdNotification.id,
+        title,
+        body: message,
+        url: "/reminders",
+        audioUrl: finalAudioUrl,
+        tag: `kotiba-${createdNotification.id}`,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to send push notification:", error?.message || error);
+  }
+
+  return createdNotification;
 };
 
 const processReminderJob = async (job) => {

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoadingState } from "./components/LoadingState";
+import { InstallAppPrompt } from "./components/InstallAppPrompt";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((module) => ({ default: module.DashboardPage })));
 const SecretaryPage = lazy(() => import("./pages/SecretaryPage").then((module) => ({ default: module.SecretaryPage })));
@@ -25,6 +26,7 @@ function ProtectedShell({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <InstallAppPrompt />
       <Suspense fallback={<div className="mx-auto max-w-7xl p-4"><LoadingState label="Sahifa yuklanmoqda..." /></div>}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />

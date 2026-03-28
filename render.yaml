@@ -34,6 +34,12 @@ services:
         value: https://uzbekvoice.ai/api/v1/tts
       - key: UZBEKVOICE_TTS_API_KEY
         sync: false
+      - key: PUSH_VAPID_PUBLIC_KEY
+        sync: false
+      - key: PUSH_VAPID_PRIVATE_KEY
+        sync: false
+      - key: PUSH_VAPID_SUBJECT
+        sync: false
       - key: REMINDER_JOB_CRON
         value: "*/1 * * * *"
       - key: MEETING_JOB_CRON
